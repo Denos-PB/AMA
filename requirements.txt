@@ -1,0 +1,22 @@
+# --- 🧠 Person 1: The Brain (AI & Logic) ---
+langchain
+langgraph
+langchain-google-genai
+google-generativeai
+pydantic
+
+moviepy
+numpy<2.0.0
+edge-tts
+pillow
+aiofiles
+
+instagrapi
+requests
+schedule
+fastapi
+uvicorn
+
+python-dotenv
+pyngrok
+streamlit
