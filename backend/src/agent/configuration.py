@@ -1,6 +1,6 @@
 import os
-from pydantic import BaseModel, Field
 from typing import Any, Optional
+from pydantic import BaseModel, Field
 
 from langchain_core.runnables import RunnableConfig
 
@@ -9,22 +9,41 @@ class Configuration(BaseModel):
 
     writer_model: str = Field(
         default="gemini-2.0-flash",
-        description = "The name of the language model to use for the agent's query generation.",
+        description = "Model used for prompt enhancement and description writing.",
     )
 
-    visual_model: str = Field(
-        default="gemini-2.0-flash-exp",
-        description="The 'Nano-Banana' model used for creating a video content" 
+    audio_engine: str = Field(
+        default="edge-tts",
+        description="TTS engine."
     )
 
+    image_model: str = Field(
+        default="pollinations",
+        description="Image generation service."
+    )
+    video_model: str = Field(
+        default="disabled",
+        description="Video generation (disabled to save cost)."
+    )
     max_retries: int = Field(
         default=3,
-        description="How many retries need to perform"
+        description="Number of retries per worker."
     )
-
     script_max_words: int = Field(
-        default=100,
-        description="Limit script length to keep video short."
+        default=120,
+        description="Limit script length to keep audio/video concise."
+    )
+    default_voice: str = Field(
+        default="neutral-female",
+        description="Default TTS voice."
+    )
+    image_style: str = Field(
+        default="cinematic",
+        description="Fallback style for images when none provided."
+    )
+    video_duration_hint: str = Field(
+        default="short",
+        description="Hint passed to video generator."
     )
 
     @classmethod
