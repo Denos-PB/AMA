@@ -1,34 +1,64 @@
 from __future__ import annotations
 
-from typing import TypedDict, Optional
-import operator
+from email import message
+from typing import Optional, Literal, TypedDict
 from typing_extensions import Annotated
+import operator
 
 from langgraph.graph import add_messages
 
+class OverallState(TypedDict, total=False):
+    request_id: str
+    user_prompt: str
+    requested_modalities: list[Literal["audio", "image", "video"]]
+    enhanced_prompt: Optional[str]
+    main_statement: Optional[str]
 
-class OverallState(TypedDict):
-    messages: Annotated[list,add_messages]
-    topic: Optional[str]
-    final_script: Optional[str]
-    final_image_prompt: Optional[str]
-    final_caption: Optional[str]
-    final_video_path: Optional[str]
-    status: str
+    audio_path: Optional[str]
+    image_path: Optional[str]
+    video_path: Optional[str]
+    description: Optional[str]
+    hashtags: Optional[list[str]]
+    
+    messages: Annotated[list, add_messages]
+    status: Literal["pending", "running", "partial", "completed", "failed"]
+    errors: Annotated[list[str], operator.add]
 
-class WriterState(TypedDict):
-    topic: str
-    drafts: Annotated[list[str], operator.add]
-    critiques: Annotated[list[str], operator.add]
-    word_count: int
-    revision_count: str
-    current_script: str
-    current_image_prompt: str
+class PromptEnhancerState(TypedDict, total=False):
+    input_prompt: str
+    enhanced_prompt: Optional[str]
+    main_statement: Optional[str]
+    style: Optional[str]
+    mood: Optional[str]
+    duration_hint: Optional[str]
+    status: Literal["pending", "running", "completed", "failed"]
+    errors: Annotated[list[str],operator.add]
 
-class VisualState(TypedDict):
-    script: str
-    image_prompt: str
-    generated_image_paths: Annotated[list[str], operator.add]
-    generated_audio_paths: Annotated[list[str], operator.add]
-    render_errors: Annotated[list[str], operator.add]
-    attempt_count: int
+class AudioState(TypedDict, total=False):
+    script: Optional[str]
+    voice: Optional[str]
+    audio_path: Optional[str]
+    status: Literal["pending", "running", "completed", "failed"]
+    errors: Annotated[list[str], operator.add]
+
+class ImageState(TypedDict, total=False):
+    prompt: Optional[str]
+    style: Optional[str]
+    image_path: Optional[str]
+    status: Literal["pending","running", "completed", "failed"]
+    errors: Annotated[list[str], operator.add]
+
+class VideoState(TypedDict, total=False):
+    prompt: Optional[str]
+    duration_hint: Optional[str]
+    video_path: Optional[str]
+    status: Literal["pending", "running", "completed", "failed"]
+    errors: Annotated[list[str], operator.add]
+
+class DescriptionState(TypedDict, total=False):
+    prompt: Optional[str]
+    assets: dict[str, Optional[str]]
+    description: Optional[str]
+    hashtags: Optional[list[str]]
+    status: Literal["pending", "running", "completed", "failed"]
+    errors: Annotated[list[str], operator.add]
