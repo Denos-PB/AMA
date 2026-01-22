@@ -36,6 +36,7 @@ class PromptEnhancerState(TypedDict, total=False):
 
 class AudioState(TypedDict, total=False):
     script: Optional[str]
+    main_statement: Optional[str]
     voice: Optional[str]
     audio_path: Optional[str]
     status: Literal["pending", "running", "completed", "failed"]
