@@ -1,4 +1,3 @@
-# backend/src/workers/audio_generator.py
 import json
 import edge_tts
 import asyncio

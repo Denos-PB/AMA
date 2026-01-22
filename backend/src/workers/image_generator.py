@@ -1,4 +1,3 @@
-# backend/src/workers/image_generator.py
 import json
 import requests
 import urllib.parse
