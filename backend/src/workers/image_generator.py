@@ -5,19 +5,21 @@ from typing import Dict, Any
 from pathlib import Path
 from google import genai
 from google.genai import types
-from workers.base import BaseWorker, WorkerResult
-from agent.prompts import IMAGE_PROMPT_SYSTEM
+from src.workers.base import BaseWorker, WorkerResult
+from src.agent.prompts import IMAGE_PROMPT_SYSTEM
+from src.agent.utils import get_logger, ensure_directory_exists
+
+logger = get_logger(__name__)
 
 class ImageGeneratorWorker(BaseWorker):
-    """Worker 3: Generates images using Pollinations.ai."""
-    
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
         self.client = genai.Client()
         self.model_id = config.get("writer_model", "gemini-2.0-flash")
         
-        self.output_dir = Path(config.get("output_dir", "outputs/images"))
-        self.output_dir.mkdir(parents=True, exist_ok=True)
+        output_base = config.get("output_dir", "outputs")
+        self.output_dir = Path(output_base) / "images"
+        ensure_directory_exists(str(self.output_dir))
     
     def validate_input(self, input_data: Dict[str, Any]) -> bool:
         return "enhanced_prompt" in input_data
