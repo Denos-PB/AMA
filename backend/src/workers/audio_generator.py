@@ -5,19 +5,22 @@ from typing import Dict, Any
 from pathlib import Path
 from google import genai
 from google.genai import types
-from workers.base import BaseWorker, WorkerResult
-from agent.prompts import AUDIO_SCRIPT_SYSTEM
+from src.workers.base import BaseWorker, WorkerResult
+from src.agent.prompts import AUDIO_SCRIPT_SYSTEM
+from src.agent.utils import get_logger, ensure_directory_exists
+
+logger = get_logger(__name__)
 
 class AudioGeneratorWorker(BaseWorker):
-    """Worker 2: Generates audio from script."""
-    
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
         self.client = genai.Client()
         self.model_id = config.get("writer_model", "gemini-2.0-flash")
         
-        self.output_dir = Path(config.get("output_dir", "outputs/audio"))
-        self.output_dir.mkdir(parents=True, exist_ok=True)
+        # Use config.output_dir instead of hardcoded path
+        output_base = config.get("output_dir", "outputs")
+        self.output_dir = Path(output_base) / "audio"
+        ensure_directory_exists(str(self.output_dir))
     
     def validate_input(self, input_data: Dict[str, Any]) -> bool:
         return "enhanced_prompt" in input_data and "main_statement" in input_data
