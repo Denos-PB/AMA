@@ -1,35 +1,49 @@
 from langgraph.graph import StateGraph, END
-from agent.state import (
+from typing import TypedDict, Any
+from src.agent.state import (
     PromptEnhancerState,
     AudioState,
     ImageState,
     DescriptionState
 )
-from tools.error_clasification import classify_error
-from workers.prompt_enhancer import PromptEnhancerWorker
-from workers.audio_generator import AudioGeneratorWorker
-from workers.image_generator import ImageGeneratorWorker
-from workers.description_writer import DescriptionWriterWorker
+from src.tools.error_classification import classify_error
+from src.workers.prompt_enhancer import PromptEnhancerWorker
+from src.workers.audio_generator import AudioGeneratorWorker
+from src.workers.image_generator import ImageGeneratorWorker
+from src.workers.description_writer import DescriptionWriterWorker
+from src.agent.utils import run_worker_with_error_handling, validate_required_fields, get_logger
+
+logger = get_logger(__name__)
 
 
 def build_prompt_subgraph(config):
-    async def _run(state: PromptEnhancerState):
-        user_prompt = state.get("input_prompt")
-        if not user_prompt:
-            raise ValueError("PromptEnhancerState.input_prompt is required")
+    async def _run(state: PromptEnhancerState) -> dict:
+        state_dict = dict(state)
+        is_valid, error_msg = validate_required_fields(state_dict, ["input_prompt"])
+        
+        if not is_valid:
+            return {"status": "failed", "errors": [error_msg]}
 
         worker = PromptEnhancerWorker(config.model_dump())
-        result = await worker.process({"user_prompt": user_prompt})
+        result = await run_worker_with_error_handling(
+            worker=worker,
+            input_data={"user_prompt": state.get("input_prompt", "")},
+            context="prompt_enhancer",
+            error_classifier=classify_error,
+            max_retries=config.max_retries
+        )
 
-        if result.success and result.output:
+        if result["status"] == "completed":
             return {
-                "enhanced_prompt": result.output.get("enhanced_prompt"),
-                "main_statement": result.output.get("main_statement"),
+                "enhanced_prompt": result["output"].get("enhanced_prompt", ""),
+                "main_statement": result["output"].get("main_statement", ""),
                 "status": "completed"
             }
-
-        err = classify_error.invoke({"error_message": str(result.error), "context": "prompt"})
-        return {"status": "failed", "errors": [err["suggestion"]]}
+        
+        return {
+            "status": result["status"],
+            "errors": [result.get("suggestion", result.get("error", "Unknown error"))]
+        }
 
     g = StateGraph(PromptEnhancerState)
     g.add_node("run", _run)
@@ -39,22 +53,35 @@ def build_prompt_subgraph(config):
 
 
 def build_audio_subgraph(config):
-    async def _run(state: AudioState):
-        script = state.get("script")
-        if not script:
-            raise ValueError("AudioState.script is required")
+    async def _run(state: AudioState) -> dict:
+        state_dict = dict(state)
+        is_valid, error_msg = validate_required_fields(state_dict, ["script"])
+        
+        if not is_valid:
+            return {"status": "failed", "errors": [error_msg]}
 
         worker = AudioGeneratorWorker(config.model_dump())
-        result = await worker.process({
-            "enhanced_prompt": script,
-            "main_statement": state.get("main_statement", "")
-        })
+        result = await run_worker_with_error_handling(
+            worker=worker,
+            input_data={
+                "enhanced_prompt": state.get("script", ""),
+                "main_statement": state.get("main_statement", "")
+            },
+            context="audio_generator",
+            error_classifier=classify_error,
+            max_retries=config.max_retries
+        )
 
-        if result.success and result.output:
-            return {"audio_path": result.output.get("audio_path"), "status": "completed"}
-
-        err = classify_error.invoke({"error_message": str(result.error), "context": "audio"})
-        return {"status": "failed", "errors": [err["suggestion"]]}
+        if result["status"] == "completed":
+            return {
+                "audio_path": result["output"].get("audio_path", ""),
+                "status": "completed"
+            }
+        
+        return {
+            "status": result["status"],
+            "errors": [result.get("suggestion", result.get("error", "Unknown error"))]
+        }
 
     g = StateGraph(AudioState)
     g.add_node("run", _run)
@@ -64,19 +91,32 @@ def build_audio_subgraph(config):
 
 
 def build_image_subgraph(config):
-    async def _run(state: ImageState):
-        prompt = state.get("prompt")
-        if not prompt:
-            raise ValueError("ImageState.prompt is required")
+    async def _run(state: ImageState) -> dict:
+        state_dict = dict(state)
+        is_valid, error_msg = validate_required_fields(state_dict, ["prompt"])
+        
+        if not is_valid:
+            return {"status": "failed", "errors": [error_msg]}
 
         worker = ImageGeneratorWorker(config.model_dump())
-        result = await worker.process({"enhanced_prompt": prompt})
+        result = await run_worker_with_error_handling(
+            worker=worker,
+            input_data={"enhanced_prompt": state.get("prompt", "")},
+            context="image_generator",
+            error_classifier=classify_error,
+            max_retries=config.max_retries
+        )
 
-        if result.success and result.output:
-            return {"image_path": result.output.get("image_path"), "status": "completed"}
-
-        err = classify_error.invoke({"error_message": str(result.error), "context": "image"})
-        return {"status": "failed", "errors": [err["suggestion"]]}
+        if result["status"] == "completed":
+            return {
+                "image_path": result["output"].get("image_path", ""),
+                "status": "completed"
+            }
+        
+        return {
+            "status": result["status"],
+            "errors": [result.get("suggestion", result.get("error", "Unknown error"))]
+        }
 
     g = StateGraph(ImageState)
     g.add_node("run", _run)
@@ -86,26 +126,36 @@ def build_image_subgraph(config):
 
 
 def build_description_subgraph(config):
-    async def _run(state: DescriptionState):
-        prompt = state.get("prompt")
-        if not prompt:
-            raise ValueError("DescriptionState.prompt is required")
+    async def _run(state: DescriptionState) -> dict:
+        state_dict = dict(state)
+        is_valid, error_msg = validate_required_fields(state_dict, ["prompt"])
+        
+        if not is_valid:
+            return {"status": "failed", "errors": [error_msg]}
 
         worker = DescriptionWriterWorker(config.model_dump())
-        result = await worker.process({
-            "enhanced_prompt": prompt,
-            "assets": state.get("assets", {})
-        })
+        result = await run_worker_with_error_handling(
+            worker=worker,
+            input_data={
+                "enhanced_prompt": state.get("prompt", ""),
+                "assets": state.get("assets", {})
+            },
+            context="description_writer",
+            error_classifier=classify_error,
+            max_retries=config.max_retries
+        )
 
-        if result.success and result.output:
+        if result["status"] == "completed":
             return {
-                "description": result.output.get("description"),
-                "hashtags": result.output.get("hashtags"),
+                "description": result["output"].get("description", ""),
+                "hashtags": result["output"].get("hashtags", []),
                 "status": "completed"
             }
-
-        err = classify_error.invoke({"error_message": str(result.error), "context": "description"})
-        return {"status": "failed", "errors": [err["suggestion"]]}
+        
+        return {
+            "status": result["status"],
+            "errors": [result.get("suggestion", result.get("error", "Unknown error"))]
+        }
 
     g = StateGraph(DescriptionState)
     g.add_node("run", _run)
