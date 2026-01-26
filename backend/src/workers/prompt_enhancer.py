@@ -2,11 +2,13 @@ import json
 from typing import Any, Dict, Optional
 import google.genai as genai
 from google.genai import types
-from workers.base import BaseWorker, WorkerResult
-from agent.prompts import PROMPT_ENHANCER_SYSTEM
+from src.workers.base import BaseWorker, WorkerResult
+from src.agent.prompts import PROMPT_ENHANCER_SYSTEM
+from src.agent.utils import get_logger
+
+logger = get_logger(__name__)
 
 class PromptEnhancerWorker(BaseWorker):
-    """Worker 1: Enhances user prompts and extracts main statement."""
 
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
