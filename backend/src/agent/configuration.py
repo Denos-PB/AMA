@@ -6,7 +6,6 @@ from langchain_core.runnables import RunnableConfig
 
 class Configuration(BaseModel):
     """The configuration for the agent."""
-
     writer_model: str = Field(
         default="gemini-2.0-flash",
         description = "Model used for prompt enhancement and description writing.",
@@ -44,6 +43,10 @@ class Configuration(BaseModel):
     video_duration_hint: str = Field(
         default="short",
         description="Hint passed to video generator."
+    )
+    output_dir: str = Field(
+        default="outputs",
+        description="Root directory for generated assets (audio, images, etc.)"
     )
 
     @classmethod
