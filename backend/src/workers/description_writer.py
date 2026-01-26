@@ -2,12 +2,13 @@ import json
 from typing import Any, Dict
 from google import genai
 from google.genai import types
-from workers.base import BaseWorker,WorkerResult
-from agent.prompts import DESCRIPTION_WRITER_SYSTEM
+from src.workers.base import BaseWorker, WorkerResult
+from src.agent.prompts import DESCRIPTION_WRITER_SYSTEM
+from src.agent.utils import get_logger
+
+logger = get_logger(__name__)
 
 class DescriptionWriterWorker(BaseWorker):
-    """Worker 5: Writes descriptions and hashtags."""
-
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
         self.client = genai.Client()
