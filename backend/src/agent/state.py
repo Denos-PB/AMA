@@ -49,13 +49,6 @@ class ImageState(TypedDict, total=False):
     status: Literal["pending","running", "completed", "failed"]
     errors: Annotated[list[str], operator.add]
 
-class VideoState(TypedDict, total=False):
-    prompt: Optional[str]
-    duration_hint: Optional[str]
-    video_path: Optional[str]
-    status: Literal["pending", "running", "completed", "failed"]
-    errors: Annotated[list[str], operator.add]
-
 class DescriptionState(TypedDict, total=False):
     prompt: Optional[str]
     assets: dict[str, Optional[str]]
