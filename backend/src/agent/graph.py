@@ -1,13 +1,13 @@
 from langgraph.graph import StateGraph, END
-from agent.state import OverallState
-from agent.configuration import Configuration
-from agent.subgraphs import (
+from src.agent.state import OverallState
+from src.agent.configuration import Configuration
+from src.agent.subgraphs import (
     build_prompt_subgraph,
     build_audio_subgraph,
     build_image_subgraph,
     build_description_subgraph,
 )
-from agent.nodes import (
+from src.agent.nodes import (
     parse_request_node,
     make_prompt_subgraph_node,
     make_audio_subgraph_node,
