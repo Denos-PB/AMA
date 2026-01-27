@@ -130,6 +130,32 @@ Generate content (main endpoint)
 
 If `SERVE_GENERATED_ASSETS=true`, you can open returned `audio_url` / `image_url` directly in browser.
 
+### `POST /publish/instagram`
+Publish an image to Instagram via Meta Graph API (dev flow expects a public `image_url`)
+
+**Request**:
+```json
+{
+  "ig_user_id": "1784140...",
+  "access_token": "EAAG...",
+  "image_url": "http://localhost:8000/assets/images/...",
+  "caption": "Hello from AMA"
+}
+```
+
+### `POST /publish/threads`
+Publish an image or text to Threads via Threads API (dev flow expects a public `image_url` for images)
+
+**Request (image)**:
+```json
+{
+  "threads_user_id": "1784140...",
+  "access_token": "THQVJ...",
+  "image_url": "http://localhost:8000/assets/images/...",
+  "text": "Hello Threads"
+}
+```
+
 ### `GET /health`
 Health check
 
