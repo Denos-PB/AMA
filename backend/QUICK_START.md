@@ -59,6 +59,7 @@ See `.env.example` for all available environment variables.
 WRITER_MODEL=gemini-2.0-flash              # LLM model to use
 API_PORT=8000                              # Port to run on
 OUTPUT_DIR=outputs                         # Where to save files
+SERVE_GENERATED_ASSETS=false               # DEV: serve OUTPUT_DIR publicly at /assets
 LOG_LEVEL=INFO                             # Logging verbosity
 CORS_ENABLED=true                          # Allow cross-origin requests
 ```
@@ -119,11 +120,15 @@ Generate content (main endpoint)
   "status": "completed",
   "enhanced_text": "...",
   "audio_path": "outputs/audio/...",
+  "audio_url": "http://localhost:8000/assets/audio/...",
   "image_path": "outputs/images/...",
+  "image_url": "http://localhost:8000/assets/images/...",
   "description": "...",
   "hashtags": ["#ai", "#tech"]
 }
 ```
+
+If `SERVE_GENERATED_ASSETS=true`, you can open returned `audio_url` / `image_url` directly in browser.
 
 ### `GET /health`
 Health check
@@ -215,6 +220,8 @@ result = response.json()
 print(f"Status: {result['status']}")
 print(f"Audio: {result['audio_path']}")
 print(f"Image: {result['image_path']}")
+print(f"Audio URL: {result.get('audio_url')}")
+print(f"Image URL: {result.get('image_url')}")
 print(f"Hashtags: {result['hashtags']}")
 ```
 
