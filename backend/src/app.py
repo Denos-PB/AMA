@@ -1,9 +1,12 @@
-from fastapi import FastAPI, HTTPException, Body
+from fastapi import FastAPI, HTTPException, Body, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import Optional, List, Any, cast, AsyncGenerator
 from contextlib import asynccontextmanager
 import os
+from pathlib import Path
+from urllib.parse import quote
 
 from src.agent.graph import create_workflow
 from src.agent.configuration import Configuration
@@ -15,6 +18,28 @@ VERBOSE = os.getenv("VERBOSE", "false").lower() == "true"
 setup_logging(log_level=LOG_LEVEL, verbose=VERBOSE)
 
 logger = get_logger(__name__)
+
+SERVE_GENERATED_ASSETS = os.getenv("SERVE_GENERATED_ASSETS", "false").lower() == "true"
+
+def build_asset_url(
+    *,
+    file_path: Optional[str],
+    request: Request,
+    output_root: Path,
+) -> Optional[str]:
+    if not file_path:
+        return None
+
+    try:
+        resolved_file_path = Path(file_path).resolve()
+        resolved_output_root = output_root.resolve()
+        relative_path = resolved_file_path.relative_to(resolved_output_root)
+    except Exception:
+        return None
+
+    quoted_relative = "/".join(quote(part) for part in relative_path.parts)
+    base_url = str(request.base_url).rstrip("/")
+    return f"{base_url}/assets/{quoted_relative}"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -61,6 +86,12 @@ except Exception as e:
     logger.error(f"Failed to initialize application: {e}")
     raise
 
+OUTPUT_ROOT = Path(config.output_dir).resolve()
+if SERVE_GENERATED_ASSETS:
+    OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
+    app.mount("/assets", StaticFiles(directory=str(OUTPUT_ROOT)), name="assets")
+    logger.warning(f"Serving generated assets publicly (dev): /assets -> {OUTPUT_ROOT}")
+
 class GenerateRequest(BaseModel):
     user_prompt: str = Field(
         ...,
@@ -90,7 +121,9 @@ class GenerateResponse(BaseModel):
     status: str
     enhanced_text: Optional[str] = None
     audio_path: Optional[str] = None
+    audio_url: Optional[str] = None
     image_path: Optional[str] = None
+    image_url: Optional[str] = None
     description: Optional[str] = None
     hashtags: Optional[List[str]] = None
     errors: Optional[List[str]] = None
@@ -107,16 +140,16 @@ async def health_check():
 
 
 @app.post("/generate", response_model=GenerateResponse)
-async def generate(request: GenerateRequest = Body(...)):
-    request_id = request.request_id or f"req_{hash(request.user_prompt) % 1000000}"
+async def generate(http_request: Request, payload: GenerateRequest = Body(...)):
+    request_id = payload.request_id or f"req_{hash(payload.user_prompt) % 1000000}"
     
-    logger.info(f"[{request_id}] Processing request: {request.user_prompt[:50]}...")
+    logger.info(f"[{request_id}] Processing request: {payload.user_prompt[:50]}...")
     
     try:
         input_state = {
             "request_id": request_id,
-            "user_prompt": request.user_prompt,
-            "requested_modalities": request.modalities or ["audio", "image"],
+            "user_prompt": payload.user_prompt,
+            "requested_modalities": payload.modalities or ["audio", "image"],
             "status": "pending"
         }
         
@@ -134,7 +167,17 @@ async def generate(request: GenerateRequest = Body(...)):
             status=result.get("status", "unknown"),
             enhanced_text=result.get("enhanced_prompt"),
             audio_path=result.get("audio_path"),
+            audio_url=build_asset_url(
+                file_path=result.get("audio_path"),
+                request=http_request,
+                output_root=OUTPUT_ROOT,
+            ) if (SERVE_GENERATED_ASSETS and http_request is not None) else None,
             image_path=result.get("image_path"),
+            image_url=build_asset_url(
+                file_path=result.get("image_path"),
+                request=http_request,
+                output_root=OUTPUT_ROOT,
+            ) if (SERVE_GENERATED_ASSETS and http_request is not None) else None,
             description=result.get("description"),
             hashtags=result.get("hashtags"),
             errors=result.get("errors"),
