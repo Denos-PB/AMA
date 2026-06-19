@@ -1,7 +1,6 @@
 from typing import Literal
 from pydantic import BaseModel, Field
 
-RevisionTarget = Literal["threads for threads_text", "caption", "hashtags", "image", "audio"]
 RevisionTarget = Literal["threads_text", "caption", "hashtags", "image", "audio"]
 
 class RevisionPlanOutput(BaseModel):
