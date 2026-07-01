@@ -427,3 +427,7 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# AMA runtime data
+backend/data/
+backend/data/**/*.db
