@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     deepseek_model: str = "deepseek-chat"
     deepseek_timeout: float = 60.0
     deepseek_temperature: float = 0.2
+    langfuse_enabled: bool = False
+    langfuse_public_key: str | None = None
+    langfuse_secret_key: str | None = None
+    langfuse_host: str | None = None
 
 @lru_cache
 def get_settings() -> Settings:

@@ -33,6 +33,29 @@ def _state_to_response(
     )
 
 
+def _build_invoke_config(settings: Settings, thread_id: str) -> dict:
+    config = graph_config(thread_id)
+    if not settings.langfuse_enabled:
+        return config
+
+    if not (settings.langfuse_public_key and settings.langfuse_secret_key):
+        return config
+
+    try:
+        from langfuse.langchain import CallbackHandler
+    except Exception:
+        return config
+
+    callback = CallbackHandler(
+        public_key=settings.langfuse_public_key,
+        secret_key=settings.langfuse_secret_key,
+        host=settings.langfuse_host,
+    )
+    config["callbacks"] = [callback]
+    config["tags"] = ["ama", "create_post"]
+    return config
+
+
 @router.post("", response_model=PostResponse)
 async def create_post(
     body: CreatePostRequest,
@@ -41,7 +64,7 @@ async def create_post(
 ) -> PostResponse:
     thread_id = f"thread_{uuid4()}"
     request_id = str(uuid4())
-    config = graph_config(thread_id)
+    config = _build_invoke_config(settings, thread_id)
 
     input_state = {
         "thread_id": thread_id,
