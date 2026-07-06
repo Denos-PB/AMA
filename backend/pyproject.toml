@@ -17,7 +17,7 @@ dependencies = [
     "python-dotenv>=1.0",
 ]
 [dependency-groups]
-dev = ["pytest>=8.0", "pytest-asyncio>=0.24", "httpx"]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.24", "pytest-httpx>=0.35", "httpx"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
