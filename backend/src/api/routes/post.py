@@ -24,7 +24,12 @@ def _state_to_response(
         draft_version=values.get("draft_version", 0),
         image_path=values.get("image_path"),
         audio_path=values.get("audio_path"),
+        post_plan=values.get("post_plan"),
+        modalities=values.get("modalities") or [],
+        target_platforms=values.get("target_platforms") or [],
         completed_steps=values.get("completed_steps") or [],
+        failed_steps=values.get("failed_steps") or [],
+        errors=values.get("errors") or [],
     )
 
 
