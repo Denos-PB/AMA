@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     checkpoint_db_path: str = "data/checkpoints.db"
     log_level: str = "INFO"
     default_user_id: str = "user_default"
+    deepseek_base_url: str = "https://api.deepseek.com/v1"
+    deepseek_model: str = "deepseek-chat"
+    deepseek_timeout: float = 60.0
+    deepseek_temperature: float = 0.2
 
 @lru_cache
 def get_settings() -> Settings:
