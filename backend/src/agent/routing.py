@@ -11,3 +11,8 @@ def route_after_generate_text(state: OverallState):
     if state.get("status") == "failed":
         return END
     return "generate_image"
+
+def route_after_parse_intent(state: OverallState):
+    if state.get("status") == "failed":
+        return END
+    return "retrieve_context"

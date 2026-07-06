@@ -43,7 +43,7 @@ async def create_post(
         "user_id": body.user_id or settings.default_user_id,
         "request_id": request_id,
         "user_prompt": body.user_prompt,
-        "modalities": body.modalities or ["text", "image"],
+        "modalities": body.modalities,
         "status": "pending",
         "hashtags": [],
         "draft_version": 0,

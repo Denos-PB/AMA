@@ -11,7 +11,11 @@ from src.agent.nodes.parse_intent import parse_intent_node
 from src.agent.nodes.plan_post import plan_post_node
 from src.agent.nodes.publish_post import publish_post_node
 from src.agent.nodes.retrieve_context import retrieve_context_node
-from src.agent.routing import route_after_generate_text, route_after_plan
+from src.agent.routing import (
+    route_after_generate_text,
+    route_after_parse_intent,
+    route_after_plan,
+)
 from src.agent.state import OverallState
 
 
@@ -31,7 +35,11 @@ def build_graph() -> StateGraph:
     g.add_node("index_memory", index_memory_node)
 
     g.set_entry_point("parse_intent")
-    g.add_edge("parse_intent", "retrieve_context")
+    g.add_conditional_edges(
+        "parse_intent",
+        route_after_parse_intent,
+        {"retrieve_context": "retrieve_context", END: END},
+    )
     g.add_edge("retrieve_context", "plan_post")
     g.add_conditional_edges(
         "plan_post",
