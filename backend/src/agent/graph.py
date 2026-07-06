@@ -12,6 +12,7 @@ from src.agent.nodes.plan_post import plan_post_node
 from src.agent.nodes.publish_post import publish_post_node
 from src.agent.nodes.retrieve_context import retrieve_context_node
 from src.agent.routing import (
+    route_after_generate_image,
     route_after_generate_text,
     route_after_parse_intent,
     route_after_plan,
@@ -54,10 +55,20 @@ def build_graph() -> StateGraph:
         route_after_generate_text,
         {
             "generate_image": "generate_image",
+            "generate_audio": "generate_audio",
+            "assemble_draft": "assemble_draft",
             END: END,
         },
     )
-    g.add_edge("generate_image", "generate_audio")
+    g.add_conditional_edges(
+        "generate_image",
+        route_after_generate_image,
+        {
+            "generate_audio": "generate_audio",
+            "assemble_draft": "assemble_draft",
+            END: END,
+        },
+    )
     g.add_edge("generate_audio", "assemble_draft")
     g.add_edge("assemble_draft", "await_review")
     g.add_edge("await_review", END)
