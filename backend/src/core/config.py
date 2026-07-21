@@ -9,6 +9,10 @@ class Settings(BaseSettings):
     )
     deepseek_api_key: str | None = None
     openai_api_key: str | None = None
+    embedding_base_url: str = "https://api.openai.com/v1"
+    embedding_model: str = "text-embedding-3-small"
+    embedding_timeout: float = 30.0
+    embedding_dimensions: int = 1536
     replicate_api_token: str | None = None
     output_dir: str = "data/outputs"
     checkpoint_db_path: str = "data/checkpoints.db"
